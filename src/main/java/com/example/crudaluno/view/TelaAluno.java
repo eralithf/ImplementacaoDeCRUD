@@ -21,15 +21,17 @@ public class TelaAluno {
         TextField nomeField = new TextField();
         TextField idadeField = new TextField();
         TextField cursoField = new TextField();
+
         Button salvarBtn = new Button("Salvar");
         Button atualizarBtn = new Button("Atualizar");
         Button deletarBtn = new Button("Excluir");
-
+        Button buscarCursoBtn = new Button("Buscar por Curso");
 
         GridPane form = new GridPane();
         form.setPadding(new Insets(10));
         form.setHgap(10);
         form.setVgap(10);
+
         form.add(new Label("Nome:"), 0, 0);
         form.add(nomeField, 1, 0);
         form.add(new Label("Idade:"), 0, 1);
@@ -39,7 +41,7 @@ public class TelaAluno {
         form.add(salvarBtn, 0, 3);
         form.add(atualizarBtn, 1, 3);
         form.add(deletarBtn, 2, 3);
-
+        form.add(buscarCursoBtn, 3, 3); // Novo botão
 
         TableColumn<Aluno, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(c -> new javafx.beans.property.SimpleIntegerProperty(c.getValue().getId()).asObject());
@@ -57,7 +59,6 @@ public class TelaAluno {
         tabela.setItems(dados);
         atualizarTabela();
 
-
         tabela.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 nomeField.setText(newSel.getNome());
@@ -65,7 +66,6 @@ public class TelaAluno {
                 cursoField.setText(newSel.getCurso());
             }
         });
-
 
         salvarBtn.setOnAction(e -> {
             try {
@@ -107,9 +107,18 @@ public class TelaAluno {
             }
         });
 
+        buscarCursoBtn.setOnAction(e -> {
+            String curso = cursoField.getText();
+            if (!curso.isEmpty()) {
+                dados.setAll(alunoDAO.findByCurso(curso));
+            } else {
+                atualizarTabela();
+            }
+        });
+
         VBox layout = new VBox(10, form, tabela);
         layout.setPadding(new Insets(10));
-        Scene scene = new Scene(layout, 600, 400);
+        Scene scene = new Scene(layout, 700, 400);
 
         stage.setTitle("Gerenciamento de Alunos");
         stage.setScene(scene);

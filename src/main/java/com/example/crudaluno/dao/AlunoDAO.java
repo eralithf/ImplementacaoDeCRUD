@@ -11,7 +11,7 @@ public class AlunoDAO implements IAlunoDAO {
 
     @Override
     public void inserir(Aluno aluno) {
-        String sql = "INSERT INTO aluno (nome, idade, curso) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO aluno (name, idade, curso) VALUES (?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -36,7 +36,7 @@ public class AlunoDAO implements IAlunoDAO {
             while (rs.next()) {
                 Aluno aluno = new Aluno(
                         rs.getInt("id"),
-                        rs.getString("nome"),
+                        rs.getString("name"),
                         rs.getInt("idade"),
                         rs.getString("curso")
                 );
@@ -52,7 +52,7 @@ public class AlunoDAO implements IAlunoDAO {
 
     @Override
     public void atualizar(Aluno aluno) {
-        String sql = "UPDATE aluno SET nome=?, idade=?, curso=? WHERE id=?";
+        String sql = "UPDATE aluno SET name=?, idade=?, curso=? WHERE id=?";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -77,5 +77,29 @@ public class AlunoDAO implements IAlunoDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public List<Aluno> findByCurso(String curso) {
+        List<Aluno> alunos = new ArrayList<>();
+        String sql = "SELECT * FROM aluno WHERE curso = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, curso);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Aluno aluno = new Aluno(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("idade"),
+                        rs.getString("curso")
+                );
+                alunos.add(aluno);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return alunos;
     }
 }
