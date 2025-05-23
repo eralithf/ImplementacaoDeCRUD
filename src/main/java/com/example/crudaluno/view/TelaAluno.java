@@ -1,7 +1,9 @@
 package com.example.crudaluno.view;
 
 import com.example.crudaluno.dao.AlunoDAO;
+import com.example.crudaluno.dao.CursoDAO;
 import com.example.crudaluno.model.Aluno;
+import com.example.crudaluno.model.Curso;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -19,8 +21,10 @@ public class TelaAluno {
     public void start(Stage stage) {
 
         TextField nomeField = new TextField();
+        nomeField.setPrefWidth(150);
         TextField idadeField = new TextField();
-        TextField cursoField = new TextField();
+        ComboBox<Curso> cursoBox = new ComboBox<>();
+        cursoBox.getItems().addAll(new CursoDAO().findAll());
 
         Button salvarBtn = new Button("Salvar");
         Button atualizarBtn = new Button("Atualizar");
@@ -37,11 +41,11 @@ public class TelaAluno {
         form.add(new Label("Idade:"), 0, 1);
         form.add(idadeField, 1, 1);
         form.add(new Label("Curso:"), 0, 2);
-        form.add(cursoField, 1, 2);
+        form.add(cursoBox, 1, 2);
         form.add(salvarBtn, 0, 3);
         form.add(atualizarBtn, 1, 3);
         form.add(deletarBtn, 2, 3);
-        form.add(buscarCursoBtn, 3, 3); // Novo botão
+        form.add(buscarCursoBtn, 3, 3);
 
         TableColumn<Aluno, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(c -> new javafx.beans.property.SimpleIntegerProperty(c.getValue().getId()).asObject());
@@ -53,7 +57,8 @@ public class TelaAluno {
         colIdade.setCellValueFactory(c -> new javafx.beans.property.SimpleIntegerProperty(c.getValue().getIdade()).asObject());
 
         TableColumn<Aluno, String> colCurso = new TableColumn<>("Curso");
-        colCurso.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getCurso()));
+        colCurso.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
+                c.getValue().getCurso() != null ? c.getValue().getCurso().getSigla() : ""));
 
         tabela.getColumns().addAll(colId, colNome, colIdade, colCurso);
         tabela.setItems(dados);
@@ -63,7 +68,7 @@ public class TelaAluno {
             if (newSel != null) {
                 nomeField.setText(newSel.getNome());
                 idadeField.setText(String.valueOf(newSel.getIdade()));
-                cursoField.setText(newSel.getCurso());
+                cursoBox.setValue(newSel.getCurso());
             }
         });
 
@@ -72,10 +77,10 @@ public class TelaAluno {
                 Aluno aluno = new Aluno(
                         nomeField.getText(),
                         Integer.parseInt(idadeField.getText()),
-                        cursoField.getText()
+                        cursoBox.getValue()
                 );
                 alunoDAO.inserir(aluno);
-                limparCampos(nomeField, idadeField, cursoField);
+                limparCampos(nomeField, idadeField, cursoBox);
                 atualizarTabela();
             } catch (Exception ex) {
                 alertarErro("Erro ao inserir aluno: " + ex.getMessage());
@@ -88,9 +93,9 @@ public class TelaAluno {
                 try {
                     selecionado.setNome(nomeField.getText());
                     selecionado.setIdade(Integer.parseInt(idadeField.getText()));
-                    selecionado.setCurso(cursoField.getText());
+                    selecionado.setCurso(cursoBox.getValue());
                     alunoDAO.atualizar(selecionado);
-                    limparCampos(nomeField, idadeField, cursoField);
+                    limparCampos(nomeField, idadeField, cursoBox);
                     atualizarTabela();
                 } catch (Exception ex) {
                     alertarErro("Erro ao atualizar: " + ex.getMessage());
@@ -102,15 +107,15 @@ public class TelaAluno {
             Aluno selecionado = tabela.getSelectionModel().getSelectedItem();
             if (selecionado != null) {
                 alunoDAO.excluir(selecionado.getId());
-                limparCampos(nomeField, idadeField, cursoField);
+                limparCampos(nomeField, idadeField, cursoBox);
                 atualizarTabela();
             }
         });
 
         buscarCursoBtn.setOnAction(e -> {
-            String curso = cursoField.getText();
-            if (!curso.isEmpty()) {
-                dados.setAll(alunoDAO.findByCurso(curso));
+            Curso curso = cursoBox.getValue();
+            if (curso != null) {
+                dados.setAll(alunoDAO.findByCurso(curso.getSigla()));
             } else {
                 atualizarTabela();
             }
@@ -129,10 +134,10 @@ public class TelaAluno {
         dados.setAll(alunoDAO.listar());
     }
 
-    private void limparCampos(TextField nome, TextField idade, TextField curso) {
+    private void limparCampos(TextField nome, TextField idade, ComboBox<Curso> cursoBox) {
         nome.clear();
         idade.clear();
-        curso.clear();
+        cursoBox.getSelectionModel().clearSelection();
     }
 
     private void alertarErro(String msg) {
